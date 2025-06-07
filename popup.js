@@ -14,6 +14,7 @@ class AutoFillerPopup {    constructor() {
         this.playBtn = document.getElementById('playBtn');
         this.saveBtn = document.getElementById('saveBtn');
         this.clearBtn = document.getElementById('clearBtn');
+        this.clearAllBtn = document.getElementById('clearAllBtn');
         this.scenarioName = document.getElementById('scenarioName');
         this.actionsList = document.getElementById('actionsList');
         this.scenariosList = document.getElementById('scenariosList');
@@ -24,6 +25,7 @@ class AutoFillerPopup {    constructor() {
         this.playBtn.addEventListener('click', () => this.playScenario());
         this.saveBtn.addEventListener('click', () => this.saveCurrentScenario());
         this.clearBtn.addEventListener('click', () => this.clearCurrentScenario());
+        this.clearAllBtn.addEventListener('click', () => this.clearAllScenarios());
         this.scenarioName.addEventListener('input', () => this.updateButtonStates());
     }
       async startRecording() {
@@ -149,6 +151,7 @@ class AutoFillerPopup {    constructor() {
         this.playBtn.disabled = !hasActions || this.isRecording;
         this.saveBtn.disabled = !hasActions || !hasName || this.isRecording;
         this.clearBtn.disabled = !hasActions && !hasName || this.isRecording;
+        this.clearAllBtn.disabled = this.savedScenarios.length === 0 || this.isRecording;
     }
     
     updatePlayButtonState() {
@@ -284,10 +287,10 @@ class AutoFillerPopup {    constructor() {
             console.error('Error loading scenarios:', error);
         }
     }
-    
-    updateScenariosList() {
+      updateScenariosList() {
         if (this.savedScenarios.length === 0) {
             this.scenariosList.innerHTML = '<p class="empty-state">No saved scenarios</p>';
+            this.updateButtonStates(); // Update button states when no scenarios
             return;
         }
         
@@ -313,6 +316,8 @@ class AutoFillerPopup {    constructor() {
                 this.loadScenario(scenarioId);
             });
         });
+        
+        this.updateButtonStates(); // Update button states when scenarios exist
     }
     
     loadScenario(scenarioId) {
@@ -355,8 +360,7 @@ class AutoFillerPopup {    constructor() {
             }
         }, 3000);
     }
-    
-    clearCurrentScenario() {
+      clearCurrentScenario() {
         if (this.isRecording) {
             this.updateStatus('Cannot clear scenario while recording. Stop recording first.');
             return;
@@ -367,6 +371,46 @@ class AutoFillerPopup {    constructor() {
         this.updateActionsList();
         this.updateButtonStates();
         this.updateStatus('Current scenario cleared');
+    }
+    
+    async clearAllScenarios() {
+        if (this.isRecording) {
+            this.updateStatus('Cannot clear scenarios while recording. Stop recording first.');
+            return;
+        }
+        
+        if (this.savedScenarios.length === 0) {
+            this.updateStatus('No scenarios to clear');
+            return;
+        }
+        
+        // Show confirmation dialog
+        const confirmed = confirm(`Are you sure you want to delete all ${this.savedScenarios.length} saved scenarios? This action cannot be undone.`);
+        
+        if (!confirmed) {
+            return;
+        }
+        
+        try {
+            // Clear all scenarios from storage
+            const result = await chrome.storage.local.get();
+            const keysToRemove = Object.keys(result).filter(key => key.startsWith('scenario_'));
+            
+            if (keysToRemove.length > 0) {
+                await chrome.storage.local.remove(keysToRemove);
+            }
+            
+            // Clear local array
+            this.savedScenarios = [];
+            this.updateScenariosList();
+            this.updateButtonStates();
+            
+            this.updateStatus(`✅ All scenarios cleared successfully!`);
+            
+        } catch (error) {
+            console.error('Error clearing all scenarios:', error);
+            this.updateStatus('Error: Could not clear scenarios');
+        }
     }
 }
 
