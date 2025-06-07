@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Filler</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Auto Filler</h1>
+            <p>AI-driven web testing automation</p>
+        </header>
+        
+        <div class="controls">
+            <button id="recordBtn" class="btn btn-primary">
+                <span class="icon">⏺</span>
+                Start Recording
+            </button>
+            <button id="stopBtn" class="btn btn-secondary" disabled>
+                <span class="icon">⏹</span>
+                Stop Recording
+            </button>
+            <button id="playBtn" class="btn btn-success" disabled>
+                <span class="icon">▶</span>
+                Play Scenario
+            </button>
+        </div>
+        
+        <div class="scenario-section">
+            <h3>Current Scenario</h3>
+            <input type="text" id="scenarioName" placeholder="Enter scenario name..." />
+            <div id="actionsList" class="actions-list">
+                <p class="empty-state">No actions recorded yet</p>
+            </div>
+        </div>
+        
+        <div class="saved-scenarios">
+            <h3>Saved Scenarios</h3>
+            <div id="scenariosList" class="scenarios-list">
+                <p class="empty-state">No saved scenarios</p>
+            </div>
+        </div>
+        
+        <div class="status">
+            <span id="statusText">Ready</span>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
