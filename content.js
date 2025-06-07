@@ -16,10 +16,14 @@ class AutoFillerContent {
             return true;
         });
     }
-    
-    async handleMessage(message, sender, sendResponse) {
+      async handleMessage(message, sender, sendResponse) {
         try {
             switch (message.action) {
+                case 'ping':
+                    // Health check message
+                    sendResponse({ success: true, status: 'content script loaded' });
+                    break;
+                    
                 case 'startRecording':
                     await this.startRecording();
                     sendResponse({ success: true });
@@ -575,7 +579,9 @@ class ElementMatcher {
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         window.autoFillerContent = new AutoFillerContent();
+        console.log('Auto Filler: Content script initialized (DOM loaded)');
     });
 } else {
     window.autoFillerContent = new AutoFillerContent();
+    console.log('Auto Filler: Content script initialized (DOM ready)');
 }

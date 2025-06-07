@@ -70,17 +70,30 @@ class AutoFillerBackground {
             sendResponse({ error: error.message });
         }
     }
-    
-    async onTabReady(tabId, tab) {
-        try {
-            // Inject content script if needed
-            await chrome.scripting.executeScript({
-                target: { tabId },
-                files: ['content.js']
-            });
-        } catch (error) {
-            // Content script might already be injected
-            console.log('Content script injection skipped:', error.message);
+      async onTabReady(tabId, tab) {
+        // Only inject content script on regular web pages
+        if (tab.url && 
+            !tab.url.startsWith('chrome://') && 
+            !tab.url.startsWith('chrome-extension://') &&
+            !tab.url.startsWith('edge://') &&
+            !tab.url.startsWith('about:') &&
+            !tab.url.startsWith('moz-extension://')) {
+            
+            try {
+                // Check if content script is already injected
+                await chrome.tabs.sendMessage(tabId, { action: 'ping' });
+            } catch (error) {
+                // Content script not loaded, inject it
+                try {
+                    await chrome.scripting.executeScript({
+                        target: { tabId },
+                        files: ['content.js']
+                    });
+                    console.log('Content script injected for tab:', tabId);
+                } catch (injectionError) {
+                    console.log('Content script injection failed:', injectionError.message);
+                }
+            }
         }
     }
     

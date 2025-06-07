@@ -27,11 +27,16 @@ class AutoFillerPopup {    constructor() {
         this.clearBtn.addEventListener('click', () => this.clearCurrentScenario());
         this.clearAllBtn.addEventListener('click', () => this.clearAllScenarios());
         this.scenarioName.addEventListener('input', () => this.updateButtonStates());
-    }
-      async startRecording() {
+    }    async startRecording() {
         try {
             // Get active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            // Check if tab URL is valid for content script injection
+            if (!tab.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('edge://') || tab.url.startsWith('about:')) {
+                this.updateStatus('Error: Cannot record on this page. Try a regular website.');
+                return;
+            }
             
             // Clear current scenario
             this.currentScenario = [];
@@ -40,18 +45,19 @@ class AutoFillerPopup {    constructor() {
             // Start recording via background script
             await chrome.runtime.sendMessage({ action: 'startRecording' });
             
-            // Tell content script to start recording
-            await chrome.tabs.sendMessage(tab.id, { action: 'startRecording' });
+            // Ensure content script is loaded and send message
+            await this.ensureContentScriptAndSendMessage(tab.id, { action: 'startRecording' });
             
             this.isRecording = true;
-            this.updateRecordingState();            this.updateStatus('Recording started - you can close this popup and interact with webpages');
+            this.updateRecordingState();
+            this.updateStatus('Recording started - you can close this popup and interact with webpages');
             
             // Listen for recorded actions
             this.setupActionListener();
             
         } catch (error) {
             console.error('Error starting recording:', error);
-            this.updateStatus('Error: Could not start recording. Try refreshing the page.');
+            this.updateStatus('Error: Could not start recording. Try refreshing the page and ensure you\'re on a regular website.');
         }
     }    async stopRecording() {
         try {
@@ -60,8 +66,13 @@ class AutoFillerPopup {    constructor() {
             // Stop recording via background script
             const response = await chrome.runtime.sendMessage({ action: 'stopRecording' });
             
-            // Tell content script to stop recording  
-            await chrome.tabs.sendMessage(tab.id, { action: 'stopRecording' });
+            // Tell content script to stop recording with error handling
+            try {
+                await chrome.tabs.sendMessage(tab.id, { action: 'stopRecording' });
+            } catch (messageError) {
+                console.warn('Could not send stop message to content script:', messageError);
+                // Continue anyway as background script has the data
+            }
             
             // Get the recorded scenario from background
             if (response.scenario) {
@@ -84,8 +95,7 @@ class AutoFillerPopup {    constructor() {
             this.updateStatus('Error: Could not stop recording');
         }
     }
-    
-    async playScenario() {
+      async playScenario() {
         if (this.currentScenario.length === 0) return;
         
         try {
@@ -94,7 +104,7 @@ class AutoFillerPopup {    constructor() {
             this.updateStatus('Playing scenario...');
             this.playBtn.disabled = true;
             
-            await chrome.tabs.sendMessage(tab.id, {
+            await this.ensureContentScriptAndSendMessage(tab.id, {
                 action: 'playScenario',
                 scenario: this.currentScenario
             });
@@ -104,8 +114,35 @@ class AutoFillerPopup {    constructor() {
             
         } catch (error) {
             console.error('Error playing scenario:', error);
-            this.updateStatus('Error: Could not play scenario');
+            this.updateStatus('Error: Could not play scenario. Try refreshing the page.');
             this.playBtn.disabled = false;
+        }
+    }
+    
+    // Helper method to ensure content script is loaded before sending messages
+    async ensureContentScriptAndSendMessage(tabId, message) {
+        try {
+            // Try to send message first
+            await chrome.tabs.sendMessage(tabId, message);
+        } catch (error) {
+            if (error.message.includes('Could not establish connection') || 
+                error.message.includes('Receiving end does not exist')) {
+                
+                // Content script not loaded, inject it
+                console.log('Content script not loaded, injecting...');
+                await chrome.scripting.executeScript({
+                    target: { tabId: tabId },
+                    files: ['content.js']
+                });
+                
+                // Wait a bit for the script to initialize
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Try sending message again
+                await chrome.tabs.sendMessage(tabId, message);
+            } else {
+                throw error;
+            }
         }
     }
       setupActionListener() {

@@ -52,6 +52,13 @@
 
 ## 🐛 Troubleshooting
 
+### "Could not establish connection" Error?
+- **Reload Extension**: Go to `chrome://extensions/`, find Auto Filler, click reload button
+- **Refresh Page**: Refresh the webpage you're trying to record on
+- **Check Page Type**: Extension cannot work on Chrome internal pages (chrome://, about:, etc.)
+- **Try Different Site**: Test on a regular website like Google.com first
+- **Check Console**: Press F12, look for Auto Filler messages in Console tab
+
 ### No Actions Captured?
 - Make sure the red recording indicator appears
 - Try refreshing the webpage after installing/reloading extension
