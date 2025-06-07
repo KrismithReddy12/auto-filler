@@ -11,8 +11,7 @@
         <header>
             <h1>Auto Filler</h1>
             <p>AI-driven web testing automation</p>
-        </header>
-          <div class="controls">
+        </header>        <div class="controls">
             <button id="recordBtn" class="btn btn-primary">
                 <span class="icon">⏺</span>
                 Start Recording
@@ -25,6 +24,17 @@
                 <span class="icon">▶</span>
                 Play Scenario
             </button>
+        </div>
+        
+        <div class="playback-settings">
+            <div class="setting-group">
+                <label for="playbackSpeed">Playback Speed:</label>
+                <select id="playbackSpeed" class="speed-selector">
+                    <option value="instant">⚡ Instant (Developer Mode)</option>
+                    <option value="fast">🚀 Fast (50ms delay)</option>
+                    <option value="normal">🐌 Normal (500ms delay)</option>
+                </select>
+            </div>
         </div>
         
         <div class="scenario-section">

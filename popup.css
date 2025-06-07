@@ -43,6 +43,40 @@ header p {
     flex-wrap: wrap;
 }
 
+.playback-settings {
+    padding: 0 20px 15px;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.setting-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.setting-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #555;
+    white-space: nowrap;
+}
+
+.speed-selector {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #e1e5e9;
+    border-radius: 4px;
+    font-size: 11px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.speed-selector:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
 .btn {
     border: none;
     padding: 10px 16px;

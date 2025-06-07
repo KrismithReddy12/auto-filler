@@ -33,9 +33,8 @@ class AutoFillerContent {
                     await this.stopRecording();
                     sendResponse({ success: true });
                     break;
-                    
-                case 'playScenario':
-                    await this.playScenario(message.scenario);
+                      case 'playScenario':
+                    await this.playScenario(message.scenario, message.playbackSpeed);
                     sendResponse({ success: true });
                     break;
                     
@@ -185,16 +184,33 @@ class AutoFillerContent {
         }).catch(() => {
             // Popup might not be open
         });
-    }
-    
-    async playScenario(scenario) {
-        console.log('Playing scenario:', scenario);
+    }    async playScenario(scenario, playbackSpeed = 'instant') {
+        console.log('Playing scenario:', scenario, 'at speed:', playbackSpeed);
         
         for (const action of scenario) {
             try {
                 await this.executeAction(action);
-                // Wait between actions
-                await this.wait(500);
+                
+                // Apply speed-based delays
+                if (action.type === 'navigate') {
+                    // Always add minimal delay for navigation to ensure page loads
+                    await this.wait(100);
+                } else {
+                    // Apply playback speed delays for other actions
+                    switch (playbackSpeed) {
+                        case 'fast':
+                            await this.wait(50);
+                            break;
+                        case 'normal':
+                            await this.wait(500);
+                            break;
+                        case 'instant':
+                        default:
+                            // No delay for instant mode
+                            break;
+                    }
+                }
+                
             } catch (error) {
                 console.error('Error executing action:', error);
                 // Try to continue with next action
@@ -226,12 +242,12 @@ class AutoFillerContent {
                 console.warn('Unknown action type:', action.type);
         }
     }
-    
-    async executeClick(action) {
+      async executeClick(action) {
         const element = await this.findElement(action);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            await this.wait(200);
+            // Use instant scroll for better speed
+            element.scrollIntoView({ behavior: 'instant', block: 'center' });
+            // Remove the 200ms wait for instant execution
             element.click();
         } else {
             console.warn('Element not found for click action:', action.selector);

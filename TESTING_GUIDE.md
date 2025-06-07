@@ -24,8 +24,12 @@
 1. **Clear Form**: Refresh the test page to clear the form
 2. **Open Extension**: Click the Auto Filler icon
 3. **Load Scenario**: Click on "My Test Scenario" in the saved scenarios list
-4. **Play**: Click "Play Scenario" ▶️
-5. **Watch**: The form should automatically fill out!
+4. **Choose Speed**: Select playback speed from dropdown:
+   - ⚡ **Instant (Developer Mode)**: No delays - fastest execution
+   - 🚀 **Fast (50ms delay)**: Quick with minimal pauses
+   - 🐌 **Normal (500ms delay)**: Slower, more human-like timing
+5. **Play**: Click "Play Scenario" ▶️
+6. **Watch**: The form should automatically fill out at your chosen speed!
 
 ## ✅ What Should Happen
 
@@ -46,9 +50,13 @@
 - ✅ Success message shows
 
 ### During Playback:
-- ✅ Form fills out automatically
+- ✅ Form fills out automatically at selected speed
+- ✅ **Instant Mode**: Actions execute immediately (great for developers)
+- ✅ **Fast Mode**: Quick execution with 50ms delays
+- ✅ **Normal Mode**: Human-like timing with 500ms delays
 - ✅ Buttons are clicked in sequence
 - ✅ Dropdown selections are made
+- ✅ Status shows current playback speed during execution
 
 ## 🐛 Troubleshooting
 
@@ -78,9 +86,11 @@
 
 After testing, you should have:
 1. ✅ A working recording system that persists when popup closes
-2. ✅ Saved scenarios that can be replayed
-3. ✅ Visual feedback during recording
-4. ✅ Proper scenario management (save/clear/load)
+2. ✅ Saved scenarios that can be replayed at different speeds
+3. ✅ **Speed Options**: Test all three playback speeds work correctly
+4. ✅ Visual feedback during recording
+5. ✅ Proper scenario management (save/clear/load)
+6. ✅ **Developer Productivity**: Instant playback for rapid testing
 
 ---
 

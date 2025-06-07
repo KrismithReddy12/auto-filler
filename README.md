@@ -6,6 +6,7 @@ Auto Filler is an AI-driven browser extension designed to simplify manual web ap
 
 - **Action Recording**: Captures user interactions (clicks, typing, form selections)
 - **Scenario Management**: Create, save, and organize test scenarios
+- **Variable Playback Speed**: Choose from instant, fast, or normal playback speeds
 - **AI-Assisted Playback**: Smart element matching that adapts to minor UI changes
 - **Beautiful UI**: Modern, intuitive interface for managing scenarios
 - **Cross-browser Support**: Compatible with Chrome, Firefox, and Edge
@@ -39,6 +40,10 @@ Auto Filler is an AI-driven browser extension designed to simplify manual web ap
 
 3. **Replay Scenario**:
    - Select a saved scenario or use the current one
+   - Choose your preferred playback speed:
+     - **⚡ Instant**: No delays - perfect for developers
+     - **🚀 Fast**: 50ms delays between actions
+     - **🐌 Normal**: 500ms delays for human-like timing
    - Click "Play Scenario" to replay all recorded actions
 
 ## Technical Architecture
@@ -105,6 +110,14 @@ To add new action types:
 3. Update popup UI to display new action types
 4. Add appropriate icons and styling
 
+## Recent Improvements
+
+- **Variable Playback Speed**: Added instant, fast, and normal playback modes
+- **Developer Mode**: Instant playback with no delays for rapid testing
+- **Clear All Scenarios**: Bulk deletion of saved scenarios with confirmation
+- **Enhanced Error Handling**: Better connection error handling and recovery
+- **Improved UI**: Modern design with speed selector and better button management
+
 ## Future Enhancements
 
 - Export scenarios as automated test scripts
@@ -112,6 +125,8 @@ To add new action types:
 - Advanced AI learning from usage patterns
 - Cross-browser scenario synchronization
 - Team collaboration features
+- Custom playback speed settings
+- Scenario scheduling and automation
 
 ## Troubleshooting
 

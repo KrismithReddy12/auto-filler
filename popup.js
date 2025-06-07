@@ -15,11 +15,12 @@ class AutoFillerPopup {    constructor() {
         this.saveBtn = document.getElementById('saveBtn');
         this.clearBtn = document.getElementById('clearBtn');
         this.clearAllBtn = document.getElementById('clearAllBtn');
+        this.playbackSpeed = document.getElementById('playbackSpeed');
         this.scenarioName = document.getElementById('scenarioName');
         this.actionsList = document.getElementById('actionsList');
         this.scenariosList = document.getElementById('scenariosList');
         this.statusText = document.getElementById('statusText');
-    }    setupEventListeners() {
+    }setupEventListeners() {
         this.recordBtn.addEventListener('click', () => this.startRecording());
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.playBtn.addEventListener('click', () => this.playScenario());
@@ -94,19 +95,26 @@ class AutoFillerPopup {    constructor() {
             console.error('Error stopping recording:', error);
             this.updateStatus('Error: Could not stop recording');
         }
-    }
-      async playScenario() {
+    }    async playScenario() {
         if (this.currentScenario.length === 0) return;
-        
-        try {
+          try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             
-            this.updateStatus('Playing scenario...');
+            // Get selected playback speed
+            const playbackSpeed = this.playbackSpeed.value;
+            const speedText = {
+                'instant': 'instant (Developer Mode)',
+                'fast': 'fast (50ms delay)',
+                'normal': 'normal (500ms delay)'
+            };
+            
+            this.updateStatus(`Playing scenario at ${speedText[playbackSpeed]} speed...`);
             this.playBtn.disabled = true;
             
             await this.ensureContentScriptAndSendMessage(tab.id, {
                 action: 'playScenario',
-                scenario: this.currentScenario
+                scenario: this.currentScenario,
+                playbackSpeed: playbackSpeed
             });
             
             this.updateStatus('Scenario playback completed');
