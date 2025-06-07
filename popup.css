@@ -84,6 +84,27 @@ header p {
     color: white;
 }
 
+.btn-save {
+    background: #4CAF50;
+    color: white;
+    flex: 0 0 auto;
+    min-width: 70px;
+}
+
+.btn-clear {
+    background: #f44336;
+    color: white;
+    flex: 0 0 auto;
+    min-width: 70px;
+}
+
+.scenario-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
 .scenario-section, .saved-scenarios {
     padding: 0 20px 20px;
 }
@@ -96,12 +117,11 @@ header p {
 }
 
 #scenarioName {
-    width: 100%;
+    flex: 1;
     padding: 10px;
     border: 2px solid #e1e5e9;
     border-radius: 6px;
     font-size: 13px;
-    margin-bottom: 15px;
     transition: border-color 0.2s ease;
 }
 
@@ -222,10 +242,46 @@ header p {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
+.recording-active {
+    background: linear-gradient(135deg, #ff4444, #cc0000) !important;
+    animation: recordingPulse 1.5s ease-in-out infinite;
+}
+
+.recording-active .icon {
+    animation: blink 1s ease-in-out infinite;
+}
+
 @keyframes pulse {
     0% { opacity: 1; }
     50% { opacity: 0.6; }
     100% { opacity: 1; }
+}
+
+@keyframes recordingPulse {
+    0%, 100% { 
+        box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+    }
+    50% { 
+        box-shadow: 0 6px 25px rgba(255, 68, 68, 0.6);
+        transform: translateY(-1px);
+    }
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.6; }
+}
+
+.status.recording {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    color: white;
+    font-weight: 600;
+    animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
 }
 
 /* Scrollbar styling */

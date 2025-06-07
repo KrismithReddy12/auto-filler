@@ -1,6 +1,5 @@
 // Auto Filler Popup Script
-class AutoFillerPopup {
-    constructor() {
+class AutoFillerPopup {    constructor() {
         this.currentScenario = [];
         this.isRecording = false;
         this.savedScenarios = [];
@@ -8,26 +7,26 @@ class AutoFillerPopup {
         this.initializeElements();
         this.setupEventListeners();
         this.loadSavedScenarios();
-    }
-    
-    initializeElements() {
+        this.loadRecordingState(); // Load persistent state
+    }    initializeElements() {
         this.recordBtn = document.getElementById('recordBtn');
         this.stopBtn = document.getElementById('stopBtn');
         this.playBtn = document.getElementById('playBtn');
+        this.saveBtn = document.getElementById('saveBtn');
+        this.clearBtn = document.getElementById('clearBtn');
         this.scenarioName = document.getElementById('scenarioName');
         this.actionsList = document.getElementById('actionsList');
         this.scenariosList = document.getElementById('scenariosList');
         this.statusText = document.getElementById('statusText');
-    }
-    
-    setupEventListeners() {
+    }    setupEventListeners() {
         this.recordBtn.addEventListener('click', () => this.startRecording());
         this.stopBtn.addEventListener('click', () => this.stopRecording());
         this.playBtn.addEventListener('click', () => this.playScenario());
-        this.scenarioName.addEventListener('input', () => this.updatePlayButtonState());
+        this.saveBtn.addEventListener('click', () => this.saveCurrentScenario());
+        this.clearBtn.addEventListener('click', () => this.clearCurrentScenario());
+        this.scenarioName.addEventListener('input', () => this.updateButtonStates());
     }
-    
-    async startRecording() {
+      async startRecording() {
         try {
             // Get active tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -36,34 +35,46 @@ class AutoFillerPopup {
             this.currentScenario = [];
             this.updateActionsList();
             
-            // Start recording
+            // Start recording via background script
+            await chrome.runtime.sendMessage({ action: 'startRecording' });
+            
+            // Tell content script to start recording
             await chrome.tabs.sendMessage(tab.id, { action: 'startRecording' });
             
             this.isRecording = true;
-            this.updateRecordingState();
-            this.updateStatus('Recording started - interact with the webpage');
+            this.updateRecordingState();            this.updateStatus('Recording started - you can close this popup and interact with webpages');
             
             // Listen for recorded actions
             this.setupActionListener();
             
         } catch (error) {
             console.error('Error starting recording:', error);
-            this.updateStatus('Error: Could not start recording');
+            this.updateStatus('Error: Could not start recording. Try refreshing the page.');
         }
-    }
-    
-    async stopRecording() {
+    }    async stopRecording() {
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            
+            // Stop recording via background script
+            const response = await chrome.runtime.sendMessage({ action: 'stopRecording' });
+            
+            // Tell content script to stop recording  
             await chrome.tabs.sendMessage(tab.id, { action: 'stopRecording' });
+            
+            // Get the recorded scenario from background
+            if (response.scenario) {
+                this.currentScenario = response.scenario;
+            }
             
             this.isRecording = false;
             this.updateRecordingState();
-            this.updateStatus(`Recording stopped - ${this.currentScenario.length} actions captured`);
+            this.updateActionsList();
+            this.updateButtonStates();
             
-            // Save scenario if it has a name and actions
-            if (this.scenarioName.value.trim() && this.currentScenario.length > 0) {
-                await this.saveCurrentScenario();
+            if (this.currentScenario.length > 0) {
+                this.updateStatus(`Recording stopped - ${this.currentScenario.length} actions captured. Enter a name and click Save!`);
+            } else {
+                this.updateStatus('Recording stopped - no actions captured');
             }
             
         } catch (error) {
@@ -95,32 +106,54 @@ class AutoFillerPopup {
             this.playBtn.disabled = false;
         }
     }
-    
-    setupActionListener() {
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      setupActionListener() {
+        // Remove existing listener if any
+        if (this.actionListener) {
+            chrome.runtime.onMessage.removeListener(this.actionListener);
+        }        // Create new listener
+        this.actionListener = (message, sender, sendResponse) => {
             if (message.type === 'actionRecorded') {
                 this.currentScenario.push(message.action);
                 this.updateActionsList();
-                this.updatePlayButtonState();
+                this.updateButtonStates();
+                
+                // Update status with action count
+                if (this.isRecording) {
+                    this.updateStatus(`Recording... ${this.currentScenario.length} action${this.currentScenario.length !== 1 ? 's' : ''} captured`);
+                }
             }
-        });
+        };
+        
+        chrome.runtime.onMessage.addListener(this.actionListener);
     }
-    
-    updateRecordingState() {
+      cleanup() {
+        if (this.actionListener) {
+            chrome.runtime.onMessage.removeListener(this.actionListener);
+        }
+    }
+      updateRecordingState() {
         this.recordBtn.disabled = this.isRecording;
         this.stopBtn.disabled = !this.isRecording;
         
         if (this.isRecording) {
-            this.recordBtn.classList.add('recording');
+            this.recordBtn.classList.add('recording-active');
+            this.statusText.parentElement.classList.add('recording');
         } else {
-            this.recordBtn.classList.remove('recording');
+            this.recordBtn.classList.remove('recording-active');
+            this.statusText.parentElement.classList.remove('recording');
         }
+    }    updateButtonStates() {
+        const hasActions = this.currentScenario.length > 0;
+        const hasName = this.scenarioName.value.trim().length > 0;
+        
+        this.playBtn.disabled = !hasActions || this.isRecording;
+        this.saveBtn.disabled = !hasActions || !hasName || this.isRecording;
+        this.clearBtn.disabled = !hasActions && !hasName || this.isRecording;
     }
     
     updatePlayButtonState() {
-        const hasActions = this.currentScenario.length > 0;
-        const hasName = this.scenarioName.value.trim().length > 0;
-        this.playBtn.disabled = !hasActions || this.isRecording;
+        // Kept for backward compatibility
+        this.updateButtonStates();
     }
     
     updateActionsList() {
@@ -194,27 +227,49 @@ class AutoFillerPopup {
                 return 'Unknown target';
         }
     }
-    
-    async saveCurrentScenario() {
+      async saveCurrentScenario() {
         const scenarioName = this.scenarioName.value.trim();
-        if (!scenarioName || this.currentScenario.length === 0) return;
+        if (!scenarioName) {
+            this.updateStatus('Please enter a scenario name');
+            this.scenarioName.focus();
+            return;
+        }
         
-        const scenario = {
-            id: Date.now().toString(),
-            name: scenarioName,
-            actions: [...this.currentScenario],
-            createdAt: new Date().toISOString(),
-            actionsCount: this.currentScenario.length
-        };
+        if (this.currentScenario.length === 0) {
+            this.updateStatus('No actions to save. Record some actions first.');
+            return;
+        }
         
-        // Save to storage
-        await chrome.storage.local.set({
-            [`scenario_${scenario.id}`]: scenario
-        });
-        
-        this.savedScenarios.push(scenario);
-        this.updateScenariosList();
-        this.updateStatus(`Scenario "${scenarioName}" saved successfully`);
+        try {
+            const scenario = {
+                id: Date.now().toString(),
+                name: scenarioName,
+                actions: [...this.currentScenario],
+                createdAt: new Date().toISOString(),
+                actionsCount: this.currentScenario.length
+            };
+            
+            // Save to storage
+            await chrome.storage.local.set({
+                [`scenario_${scenario.id}`]: scenario
+            });
+            
+            // Add to local list
+            this.savedScenarios.push(scenario);
+            this.updateScenariosList();
+            
+            // Clear current scenario and name
+            this.currentScenario = [];
+            this.scenarioName.value = '';
+            this.updateActionsList();
+            this.updateButtonStates();
+            
+            this.updateStatus(`✅ Scenario "${scenarioName}" saved successfully!`);
+            
+        } catch (error) {
+            console.error('Error saving scenario:', error);
+            this.updateStatus('Error: Could not save scenario');
+        }
     }
     
     async loadSavedScenarios() {
@@ -263,12 +318,33 @@ class AutoFillerPopup {
     loadScenario(scenarioId) {
         const scenario = this.savedScenarios.find(s => s.id === scenarioId);
         if (!scenario) return;
-        
-        this.currentScenario = [...scenario.actions];
+          this.currentScenario = [...scenario.actions];
         this.scenarioName.value = scenario.name;
         this.updateActionsList();
-        this.updatePlayButtonState();
+        this.updateButtonStates();
         this.updateStatus(`Loaded scenario: ${scenario.name}`);
+    }
+    
+    async loadRecordingState() {
+        try {
+            // Get recording state from background script
+            const response = await chrome.runtime.sendMessage({ action: 'getRecordingState' });
+            
+            if (response) {
+                this.isRecording = response.isRecording || false;
+                this.currentScenario = response.scenario || [];
+                  this.updateRecordingState();
+                this.updateActionsList();
+                this.updateButtonStates();
+                
+                if (this.isRecording) {
+                    this.updateStatus('Recording in progress - interact with webpages to capture actions');
+                    this.setupActionListener();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading recording state:', error);
+        }
     }
     
     updateStatus(message) {
@@ -279,9 +355,29 @@ class AutoFillerPopup {
             }
         }, 3000);
     }
+    
+    clearCurrentScenario() {
+        if (this.isRecording) {
+            this.updateStatus('Cannot clear scenario while recording. Stop recording first.');
+            return;
+        }
+        
+        this.currentScenario = [];
+        this.scenarioName.value = '';
+        this.updateActionsList();
+        this.updateButtonStates();
+        this.updateStatus('Current scenario cleared');
+    }
 }
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new AutoFillerPopup();
+    window.autoFillerPopup = new AutoFillerPopup();
+});
+
+// Cleanup when popup closes
+window.addEventListener('beforeunload', () => {
+    if (window.autoFillerPopup) {
+        window.autoFillerPopup.cleanup();
+    }
 });

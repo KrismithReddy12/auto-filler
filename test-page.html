@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Filler Test Page</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: transform 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .instructions {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Auto Filler Test Page</h1>
+        
+        <div class="instructions">
+            <h3>📝 How to Test Your Extension:</h3>
+            <ol>
+                <li><strong>Start Recording:</strong> Click the Auto Filler extension icon and hit "Start Recording"</li>
+                <li><strong>Interact:</strong> Fill out the form below, click buttons, select options</li>
+                <li><strong>Stop Recording:</strong> Click "Stop Recording" in the extension popup</li>
+                <li><strong>Test Playback:</strong> Refresh this page and click "Play Scenario" to watch it replay!</li>
+            </ol>
+            <p><strong>💡 Tip:</strong> You can close the extension popup while recording - it will keep capturing your actions!</p>
+        </div>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="firstName">First Name:</label>
+                <input type="text" id="firstName" name="firstName" placeholder="Enter your first name">
+            </div>
+            
+            <div class="form-group">
+                <label for="lastName">Last Name:</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Enter your last name">
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email">
+            </div>
+            
+            <div class="form-group">
+                <label for="country">Country:</label>
+                <select id="country" name="country">
+                    <option value="">Select a country</option>
+                    <option value="us">United States</option>
+                    <option value="uk">United Kingdom</option>
+                    <option value="ca">Canada</option>
+                    <option value="au">Australia</option>
+                    <option value="de">Germany</option>
+                    <option value="fr">France</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="interests">Interests:</label>
+                <textarea id="interests" name="interests" rows="3" placeholder="Tell us about your interests..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <button type="button" onclick="submitForm()">Submit Form</button>
+                <button type="button" onclick="clearForm()">Clear Form</button>
+                <button type="button" onclick="fillSampleData()">Fill Sample Data</button>
+            </div>
+        </form>
+        
+        <div id="successMessage" class="success-message">
+            ✅ Form submitted successfully! Great job testing the Auto Filler extension.
+        </div>
+    </div>
+    
+    <script>
+        function submitForm() {
+            const form = document.getElementById('testForm');
+            const formData = new FormData(form);
+            
+            // Simulate form submission
+            console.log('Form submitted with data:', Object.fromEntries(formData));
+            
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Hide success message after 3 seconds
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+        }
+        
+        function clearForm() {
+            document.getElementById('testForm').reset();
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        function fillSampleData() {
+            document.getElementById('firstName').value = 'John';
+            document.getElementById('lastName').value = 'Doe';
+            document.getElementById('email').value = 'john.doe@example.com';
+            document.getElementById('country').value = 'us';
+            document.getElementById('interests').value = 'Web development, AI, and automation testing';
+        }
+        
+        // Add some interactive elements for testing
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') {
+                console.log('Button clicked:', e.target.textContent);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            console.log('Input changed:', e.target.name, '=', e.target.value);
+        });
+    </script>
+</body>
+</html>

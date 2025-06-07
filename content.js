@@ -7,6 +7,7 @@ class AutoFillerContent {
         
         this.setupMessageListener();
         this.injectPageScript();
+        this.checkRecordingState(); // Check if recording is already active
     }
     
     setupMessageListener() {
@@ -42,8 +43,7 @@ class AutoFillerContent {
             sendResponse({ error: error.message });
         }
     }
-    
-    async startRecording() {
+      async startRecording() {
         if (this.isRecording) return;
         
         this.isRecording = true;
@@ -52,16 +52,21 @@ class AutoFillerContent {
         // Add event listeners for recording
         this.addRecordingListeners();
         
+        // Show recording indicator
+        this.showRecordingIndicator();
+        
         console.log('Auto Filler: Recording started');
     }
-    
-    async stopRecording() {
+      async stopRecording() {
         if (!this.isRecording) return;
         
         this.isRecording = false;
         
         // Remove event listeners
         this.removeRecordingListeners();
+        
+        // Hide recording indicator
+        this.hideRecordingIndicator();
         
         console.log('Auto Filler: Recording stopped', this.recordedActions);
     }
@@ -283,6 +288,77 @@ class AutoFillerContent {
         };
         (document.head || document.documentElement).appendChild(script);
     }
+    
+    showRecordingIndicator() {
+        // Remove existing indicator if any
+        this.hideRecordingIndicator();
+        
+        // Create recording indicator
+        this.recordingIndicator = document.createElement('div');
+        this.recordingIndicator.id = 'auto-filler-recording-indicator';
+        this.recordingIndicator.innerHTML = `
+            <div style="
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ff4444, #cc0000);
+                color: white;
+                padding: 12px 16px;
+                border-radius: 25px;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                font-size: 14px;
+                font-weight: 600;
+                box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
+                z-index: 999999;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                animation: pulse 2s ease-in-out infinite;
+                user-select: none;
+                pointer-events: none;
+            ">
+                <div style="
+                    width: 8px;
+                    height: 8px;
+                    background: white;
+                    border-radius: 50%;
+                    animation: blink 1s ease-in-out infinite;
+                "></div>
+                Recording Actions
+            </div>
+            <style>
+                @keyframes pulse {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.05); }
+                }
+                @keyframes blink {
+                    0%, 50% { opacity: 1; }
+                    51%, 100% { opacity: 0.3; }
+                }
+            </style>
+        `;
+        
+        document.body.appendChild(this.recordingIndicator);
+    }
+    
+    hideRecordingIndicator() {
+        if (this.recordingIndicator) {
+            this.recordingIndicator.remove();
+            this.recordingIndicator = null;
+        }
+    }
+    
+    async checkRecordingState() {
+        try {
+            // Check with background script if recording is active
+            const response = await chrome.runtime.sendMessage({ action: 'getRecordingState' });
+            if (response && response.isRecording) {
+                await this.startRecording();
+            }
+        } catch (error) {
+            // Background script might not be ready yet, ignore
+        }
+    }
 }
 
 // Element Matcher - AI-assisted element matching
@@ -426,8 +502,8 @@ class ElementMatcher {
         
         // Class similarity
         if (info1.className && info2.className) {
-            const classes1 = info1.className.split(' ');
-            const classes2 = info2.className.split(' ');
+            const classes1 = info1.className.split('');
+            const classes2 = info2.className.split('');
             const commonClasses = classes1.filter(c => classes2.includes(c));
             score += (commonClasses.length / Math.max(classes1.length, classes2.length)) * 0.3;
         }
@@ -498,8 +574,8 @@ class ElementMatcher {
 // Initialize content script
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
-        new AutoFillerContent();
+        window.autoFillerContent = new AutoFillerContent();
     });
 } else {
-    new AutoFillerContent();
+    window.autoFillerContent = new AutoFillerContent();
 }

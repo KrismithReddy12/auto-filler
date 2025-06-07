@@ -1,8 +1,11 @@
 // Background service worker for Auto Filler
 class AutoFillerBackground {
     constructor() {
+        this.isRecording = false;
+        this.currentScenario = [];
         this.setupMessageHandlers();
         this.setupTabHandlers();
+        this.loadRecordingState();
     }
     
     setupMessageHandlers() {
@@ -19,8 +22,7 @@ class AutoFillerBackground {
             }
         });
     }
-    
-    async handleMessage(message, sender, sendResponse) {
+      async handleMessage(message, sender, sendResponse) {
         try {
             switch (message.action) {
                 case 'getTabInfo':
@@ -30,8 +32,34 @@ class AutoFillerBackground {
                     
                 case 'logAction':
                     console.log('Action recorded:', message.actionData);
+                    // Store action in background
+                    this.currentScenario.push(message.actionData);
+                    await this.saveRecordingState();
                     // Forward to popup if open
                     this.forwardToPopup(message.actionData);
+                    break;
+                    
+                case 'startRecording':
+                    this.isRecording = true;
+                    this.currentScenario = [];
+                    await this.saveRecordingState();
+                    sendResponse({ success: true });
+                    break;
+                    
+                case 'stopRecording':
+                    this.isRecording = false;
+                    await this.saveRecordingState();
+                    sendResponse({ 
+                        success: true, 
+                        scenario: [...this.currentScenario] 
+                    });
+                    break;
+                    
+                case 'getRecordingState':
+                    sendResponse({
+                        isRecording: this.isRecording,
+                        scenario: [...this.currentScenario]
+                    });
                     break;
                     
                 default:
@@ -64,6 +92,32 @@ class AutoFillerBackground {
         }).catch(() => {
             // Popup not open, ignore
         });
+    }
+    
+    async loadRecordingState() {
+        try {
+            const result = await chrome.storage.local.get(['recordingState']);
+            if (result.recordingState) {
+                this.isRecording = result.recordingState.isRecording || false;
+                this.currentScenario = result.recordingState.scenario || [];
+            }
+        } catch (error) {
+            console.error('Error loading recording state:', error);
+        }
+    }
+    
+    async saveRecordingState() {
+        try {
+            await chrome.storage.local.set({
+                recordingState: {
+                    isRecording: this.isRecording,
+                    scenario: this.currentScenario,
+                    timestamp: Date.now()
+                }
+            });
+        } catch (error) {
+            console.error('Error saving recording state:', error);
+        }
     }
 }
 

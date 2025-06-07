@@ -12,8 +12,7 @@
             <h1>Auto Filler</h1>
             <p>AI-driven web testing automation</p>
         </header>
-        
-        <div class="controls">
+          <div class="controls">
             <button id="recordBtn" class="btn btn-primary">
                 <span class="icon">⏺</span>
                 Start Recording
@@ -29,8 +28,17 @@
         </div>
         
         <div class="scenario-section">
-            <h3>Current Scenario</h3>
-            <input type="text" id="scenarioName" placeholder="Enter scenario name..." />
+            <h3>Current Scenario</h3>            <div class="scenario-controls">
+                <input type="text" id="scenarioName" placeholder="Enter scenario name..." />
+                <button id="saveBtn" class="btn btn-save" disabled>
+                    <span class="icon">💾</span>
+                    Save
+                </button>
+                <button id="clearBtn" class="btn btn-clear">
+                    <span class="icon">🗑</span>
+                    Clear
+                </button>
+            </div>
             <div id="actionsList" class="actions-list">
                 <p class="empty-state">No actions recorded yet</p>
             </div>
