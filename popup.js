@@ -110,15 +110,20 @@ class AutoFillerPopup {    constructor() {
             
             this.updateStatus(`Playing scenario at ${speedText[playbackSpeed]} speed...`);
             this.playBtn.disabled = true;
-            
-            await this.ensureContentScriptAndSendMessage(tab.id, {
+              // Use background script for cross-page playback coordination
+            await chrome.runtime.sendMessage({
                 action: 'playScenario',
                 scenario: this.currentScenario,
-                playbackSpeed: playbackSpeed
+                playbackSpeed: playbackSpeed,
+                tabId: tab.id
             });
             
-            this.updateStatus('Scenario playback completed');
-            this.playBtn.disabled = false;
+            this.updateStatus('Scenario playback started - will continue across page navigations');
+            
+            // Listen for playback completion
+            this.setupPlaybackCompletionListener();
+            
+            // Note: Don't re-enable play button here - let completion listener handle it
             
         } catch (error) {
             console.error('Error playing scenario:', error);
@@ -173,9 +178,32 @@ class AutoFillerPopup {    constructor() {
         
         chrome.runtime.onMessage.addListener(this.actionListener);
     }
-      cleanup() {
+    
+    setupPlaybackCompletionListener() {
+        // Remove existing listener if any
+        if (this.playbackCompletionListener) {
+            chrome.runtime.onMessage.removeListener(this.playbackCompletionListener);
+        }
+        
+        // Create new listener for playback completion
+        this.playbackCompletionListener = (message, sender, sendResponse) => {
+            if (message.type === 'playbackComplete') {
+                this.updateStatus('Scenario playback completed successfully!');
+                this.playBtn.disabled = false;
+                
+                // Remove the listener after completion
+                chrome.runtime.onMessage.removeListener(this.playbackCompletionListener);
+                this.playbackCompletionListener = null;
+            }
+        };
+        
+        chrome.runtime.onMessage.addListener(this.playbackCompletionListener);
+    }    cleanup() {
         if (this.actionListener) {
             chrome.runtime.onMessage.removeListener(this.actionListener);
+        }
+        if (this.playbackCompletionListener) {
+            chrome.runtime.onMessage.removeListener(this.playbackCompletionListener);
         }
     }
       updateRecordingState() {

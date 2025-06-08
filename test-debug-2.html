@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Page 2 - Auto Filler</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 40px;
+            background: #e8f5e8;
+        }
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>✅ Page 2 - Navigation Successful!</h1>
+        
+        <div class="success">
+            <strong>Success!</strong> The navigation worked correctly. You have reached Page 2.
+        </div>
+        
+        <p>If you see this page during playback, it means the cross-page navigation is working properly.</p>
+        
+        <button onclick="window.history.back()">← Go Back</button>
+        <button onclick="window.location.href='test-debug.html'">🏠 Return to Page 1</button>
+        
+        <div style="margin-top: 30px;">
+            <h3>Debug Information:</h3>
+            <ul>
+                <li><strong>Current URL:</strong> <span id="current-url"></span></li>
+                <li><strong>Page Load Time:</strong> <span id="load-time"></span></li>
+                <li><strong>Previous Page:</strong> <span id="referrer"></span></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('current-url').textContent = window.location.href;
+        document.getElementById('load-time').textContent = new Date().toLocaleTimeString();
+        document.getElementById('referrer').textContent = document.referrer || 'Direct navigation';
+        
+        console.log('Page 2 loaded successfully');
+        console.log('Current URL:', window.location.href);
+        console.log('Referrer:', document.referrer);
+        console.log('Load time:', new Date().toLocaleTimeString());
+    </script>
+</body>
+</html>

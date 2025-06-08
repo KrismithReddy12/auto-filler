@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Filler Test Page 2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #444;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-back {
+            background: #fd7e14;
+            color: white;
+            margin-bottom: 20px;
+            width: auto;
+            padding: 10px 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #2196f3;
+        }
+        
+        .page-indicator {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-indicator">Page 2 of 2</div>
+        
+        <h1>🎯 Auto Filler Test Page 2</h1>
+        <p class="subtitle">Cross-page navigation testing destination</p>
+        
+        <button onclick="goBack()" class="btn-back">⬅️ Go Back to Page 1</button>
+        
+        <div class="info-box">
+            <h3>🔗 Navigation Testing Complete!</h3>
+            <p>If you're seeing this page during automated playback, it means the cross-page navigation feature is working correctly!</p>
+            <ul>
+                <li><strong>Previous Page:</strong> Actions were recorded on test-page.html</li>
+                <li><strong>Navigation:</strong> Successfully navigated to this page</li>
+                <li><strong>Next:</strong> Actions can continue to be executed here</li>
+            </ul>
+        </div>
+        
+        <form id="secondPageForm">
+            <div class="form-group">
+                <label for="feedback">Your Feedback:</label>
+                <textarea id="feedback" name="feedback" rows="4" placeholder="How was your experience with the Auto Filler extension?"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="rating">Rate this tool:</label>
+                <select id="rating" name="rating">
+                    <option value="">Select a rating...</option>
+                    <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+                    <option value="4">⭐⭐⭐⭐ Good</option>
+                    <option value="3">⭐⭐⭐ Average</option>
+                    <option value="2">⭐⭐ Poor</option>
+                    <option value="1">⭐ Very Poor</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="recommend">Would you recommend this to others?</label>
+                <select id="recommend" name="recommend">
+                    <option value="">Choose...</option>
+                    <option value="yes">Yes, definitely!</option>
+                    <option value="maybe">Maybe</option>
+                    <option value="no">No</option>
+                </select>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" onclick="submitFeedback()" class="btn-success">✅ Submit Feedback</button>
+                <button type="button" onclick="clearForm()" class="btn-secondary">🗑️ Clear Form</button>
+                <button type="button" onclick="goToGoogle()" class="btn-primary">🌐 Test External Navigation</button>
+            </div>
+        </form>
+        
+        <div id="successMessage" class="success-message">
+            🎉 Thank you for your feedback! The Auto Filler extension successfully recorded and replayed actions across multiple pages.
+        </div>
+    </div>
+    
+    <script>
+        function goBack() {
+            window.location.href = 'test-page.html';
+        }
+        
+        function goToGoogle() {
+            window.location.href = 'https://www.google.com';
+        }
+        
+        function submitFeedback() {
+            const form = document.getElementById('secondPageForm');
+            const formData = new FormData(form);
+            
+            // Simulate feedback submission
+            console.log('Feedback submitted:', Object.fromEntries(formData));
+            
+            // Show success message
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Hide success message after 5 seconds
+            setTimeout(() => {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 5000);
+        }
+        
+        function clearForm() {
+            document.getElementById('secondPageForm').reset();
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // Add some test data for automated testing
+        function fillTestData() {
+            document.getElementById('feedback').value = 'This is an amazing tool for automated testing!';
+            document.getElementById('rating').value = '5';
+            document.getElementById('recommend').value = 'yes';
+        }
+        
+        // Add interactive elements for testing
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') {
+                console.log('Clicked:', e.target.textContent);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            console.log('Input changed:', e.target.name, '=', e.target.value);
+        });
+        
+        console.log('Auto Filler Test Page 2 loaded - ready for cross-page navigation testing!');
+    </script>
+</body>
+</html>

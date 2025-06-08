@@ -9,14 +9,18 @@ class AutoFillerContent {
         this.injectPageScript();
         this.checkRecordingState(); // Check if recording is already active
     }
-    
-    setupMessageListener() {
+      setupMessageListener() {
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-            this.handleMessage(message, sender, sendResponse);
-            return true;
+            try {
+                this.handleMessage(message, sender, sendResponse);
+                return true; // Keep channel open for async responses
+            } catch (error) {
+                console.error('Error in message listener:', error);
+                sendResponse({ error: error.message });
+                return false;
+            }
         });
-    }
-      async handleMessage(message, sender, sendResponse) {
+    }async handleMessage(message, sender, sendResponse) {
         try {
             switch (message.action) {
                 case 'ping':
@@ -33,9 +37,13 @@ class AutoFillerContent {
                     await this.stopRecording();
                     sendResponse({ success: true });
                     break;
-                      case 'playScenario':
-                    await this.playScenario(message.scenario, message.playbackSpeed);
+                      case 'playActionsOnPage':
+                    // Send response immediately to avoid message channel closure during navigation
                     sendResponse({ success: true });
+                    // Execute actions asynchronously
+                    this.playActionsOnPage(message.actions, message.playbackSpeed).catch(error => {
+                        console.error('Error playing actions:', error);
+                    });
                     break;
                     
                 default:
@@ -184,7 +192,48 @@ class AutoFillerContent {
         }).catch(() => {
             // Popup might not be open
         });
-    }    async playScenario(scenario, playbackSpeed = 'instant') {
+    }    async playActionsOnPage(actions, playbackSpeed = 'instant') {
+        console.log('Playing actions on current page:', actions.length, 'actions at speed:', playbackSpeed);
+        
+        for (const action of actions) {
+            try {
+                await this.executeAction(action);
+                
+                // Apply speed-based delays (skip delay for navigation actions as they cause page unload)
+                if (action.type !== 'navigate' && action.type !== 'navigation') {
+                    switch (playbackSpeed) {
+                        case 'fast':
+                            await this.wait(50);
+                            break;
+                        case 'normal':
+                            await this.wait(500);
+                            break;
+                        case 'instant':
+                        default:
+                            // No delay for instant mode
+                            break;
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error executing action:', error);
+                // Continue with next action
+            }
+        }
+        
+        console.log('Actions completed on current page');
+        
+        // Notify background script that page actions are complete
+        try {
+            chrome.runtime.sendMessage({
+                action: 'playbackComplete'
+            });
+        } catch (error) {
+            console.log('Could not notify background of completion:', error);
+        }
+    }
+
+    async playScenario(scenario, playbackSpeed = 'instant') {
         console.log('Playing scenario:', scenario, 'at speed:', playbackSpeed);
         
         for (const action of scenario) {
@@ -241,17 +290,68 @@ class AutoFillerContent {
             default:
                 console.warn('Unknown action type:', action.type);
         }
-    }
-      async executeClick(action) {
+    }    async executeClick(action) {
+        console.log('Executing click action:', action);
         const element = await this.findElement(action);
         if (element) {
+            console.log('Element found for click:', element, 'onclick:', element.onclick, 'href:', element.href);
+            
+            // Check if this might be a navigation element
+            const mightNavigate = this.mightCauseNavigation(element);
+            if (mightNavigate) {
+                console.log('Detected potential navigation element - executing click immediately');
+            }
+            
             // Use instant scroll for better speed
             element.scrollIntoView({ behavior: 'instant', block: 'center' });
-            // Remove the 200ms wait for instant execution
+            
+            console.log('Clicking element...');
             element.click();
+            console.log('Click executed');
+            
+            // If this might cause navigation, don't continue processing
+            if (mightNavigate) {
+                console.log('Navigation element clicked - stopping further action processing');
+                return;
+            }
         } else {
             console.warn('Element not found for click action:', action.selector);
         }
+    }
+    
+    mightCauseNavigation(element) {
+        // Check various indicators that this element might cause navigation
+        const tagName = element.tagName.toLowerCase();
+        
+        // Links
+        if (tagName === 'a' && element.href) return true;
+        
+        // Forms
+        if (tagName === 'input' && (element.type === 'submit' || element.type === 'button')) return true;
+        if (tagName === 'button' && element.type === 'submit') return true;
+        
+        // Elements with onclick handlers that might navigate
+        if (element.onclick) {
+            const onclickStr = element.onclick.toString();
+            if (onclickStr.includes('location') || 
+                onclickStr.includes('navigate') || 
+                onclickStr.includes('href') ||
+                onclickStr.includes('window.open') ||
+                onclickStr.includes('submit')) {
+                return true;
+            }
+        }
+        
+        // Elements with specific data attributes or classes that might indicate navigation
+        const className = element.className || '';
+        const dataAttrs = element.dataset || {};
+        
+        if (className.includes('nav') || className.includes('link') || 
+            Object.keys(dataAttrs).some(key => key.includes('nav') || key.includes('link'))) {
+            return true;
+        }
+        
+        return false;
     }
     
     async executeType(action) {
