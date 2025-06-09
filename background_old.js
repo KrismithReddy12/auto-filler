@@ -28,17 +28,14 @@ class AutoFillerBackground {
                 this.onTabReady(tabId, tab);
             }
         });
-    }
-
-    async handleMessage(message, sender, sendResponse) {
+    }    async handleMessage(message, sender, sendResponse) {
         try {
             switch (message.action) {
                 case 'getTabInfo':
                     const tab = await chrome.tabs.get(sender.tab.id);
                     sendResponse({ tab });
                     break;
-                    
-                case 'logAction':
+                      case 'logAction':
                     console.log('Action recorded:', message.actionData);
                     // Store action in background
                     this.currentScenario.push(message.actionData);
@@ -70,8 +67,7 @@ class AutoFillerBackground {
                         scenario: [...this.currentScenario]
                     });
                     break;
-                    
-                case 'playScenario':
+                      case 'playScenario':
                     await this.startScenarioPlayback(message.scenario, message.playbackSpeed, message.tabId);
                     sendResponse({ success: true });
                     break;
@@ -89,9 +85,7 @@ class AutoFillerBackground {
             console.error('Error handling message:', error);
             sendResponse({ error: error.message });
         }
-    }
-
-    async onTabReady(tabId, tab) {
+    }    async onTabReady(tabId, tab) {
         // Only inject content script on regular web pages
         if (tab.url && 
             !tab.url.startsWith('chrome://') && 
@@ -115,15 +109,14 @@ class AutoFillerBackground {
                     console.log('Content script injection failed:', injectionError.message);
                 }
             }
-            
-            // If playback is in progress and this tab completed navigation, continue playback
+              // If playback is in progress and this tab completed navigation, continue playback
             if (this.playbackState.isPlaying && this.playbackState.tabId === tabId) {
                 console.log('Page loaded during playback, continuing...');
                 
-                // Adjust delay based on playback speed - increased for normal speed
+                // Adjust delay based on playback speed
                 const { playbackSpeed } = this.playbackState;
                 const delay = playbackSpeed === 'instant' ? 200 : 
-                             playbackSpeed === 'fast' ? 500 : 1500; // Increased from 1000 to 1500
+                             playbackSpeed === 'fast' ? 500 : 1000;
                 
                 console.log(`Using ${delay}ms delay for speed: ${playbackSpeed}`);
                 
@@ -156,8 +149,7 @@ class AutoFillerBackground {
             console.error('Error loading recording state:', error);
         }
     }
-    
-    async saveRecordingState() {
+      async saveRecordingState() {
         try {
             await chrome.storage.local.set({
                 recordingState: {
@@ -185,8 +177,7 @@ class AutoFillerBackground {
         // Start playback
         await this.continuePlayback();
     }
-    
-    async continuePlayback() {
+      async continuePlayback() {
         if (!this.playbackState.isPlaying) {
             console.log('Playback not active, stopping');
             return;
@@ -217,9 +208,7 @@ class AutoFillerBackground {
         
         // Get next action to execute
         const action = scenario[currentIndex];
-        console.log(`Executing action ${currentIndex + 1}/${scenario.length}:`, action.type);
-
-        try {
+        console.log(`Executing action ${currentIndex + 1}/${scenario.length}:`, action.type);        try {
             // Send single action to content script - don't await if it might cause navigation
             chrome.tabs.sendMessage(tabId, {
                 action: 'playActionsOnPage',
@@ -238,17 +227,15 @@ class AutoFillerBackground {
             console.log('Action sent to content script');
             
             // Update current index immediately
-            this.playbackState.currentIndex = currentIndex + 1;
-
-            // Check if navigation occurred by comparing URLs after a short delay
+            this.playbackState.currentIndex = currentIndex + 1;            // Check if navigation occurred by comparing URLs after a short delay
             // Try multiple times to catch navigation that might take a moment
             let navigationDetected = false;
             let attempts = 0;
             
-            // Adjust timing based on playback speed - give much more time for normal speed
-            const maxAttempts = playbackSpeed === 'instant' ? 20 : (playbackSpeed === 'fast' ? 25 : 50);
-            const checkInterval = playbackSpeed === 'instant' ? 50 : (playbackSpeed === 'fast' ? 75 : 200);
-            const initialDelay = playbackSpeed === 'instant' ? 25 : (playbackSpeed === 'fast' ? 40 : 200);
+            // Adjust timing based on playback speed - give more time for normal speed
+            const maxAttempts = playbackSpeed === 'instant' ? 20 : (playbackSpeed === 'fast' ? 25 : 40);
+            const checkInterval = playbackSpeed === 'instant' ? 50 : (playbackSpeed === 'fast' ? 75 : 150);
+            const initialDelay = playbackSpeed === 'instant' ? 25 : (playbackSpeed === 'fast' ? 40 : 100);
             
             console.log(`Navigation detection config - Speed: ${playbackSpeed}, MaxAttempts: ${maxAttempts}, Interval: ${checkInterval}ms, InitialDelay: ${initialDelay}ms`);
             
@@ -282,6 +269,12 @@ class AutoFillerBackground {
                     console.error('Error checking navigation:', error);
                     if (attempts >= maxAttempts) {
                         // Continue anyway after max attempts
+                        setTimeout(() => {
+                            this.continuePlayback();
+                        }, 500);
+                    }
+                }
+            };
                         setTimeout(() => {
                             this.continuePlayback();
                         }, 500);

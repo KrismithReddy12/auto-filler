@@ -1,9 +1,14 @@
 // Auto Filler Content Script
-class AutoFillerContent {
-    constructor() {
+class AutoFillerContent {    constructor() {
         this.isRecording = false;
         this.recordedActions = [];
         this.elementMatcher = new ElementMatcher();
+        
+        // Store bound methods for proper event listener removal
+        this.boundHandleClick = this.handleClick.bind(this);
+        this.boundHandleInput = this.handleInput.bind(this);
+        this.boundHandleChange = this.handleChange.bind(this);
+        this.boundHandleNavigation = this.handleNavigation.bind(this);
         
         this.setupMessageListener();
         this.injectPageScript();
@@ -81,24 +86,23 @@ class AutoFillerContent {
         
         console.log('Auto Filler: Recording stopped', this.recordedActions);
     }
-    
-    addRecordingListeners() {
+      addRecordingListeners() {
         // Click events
-        document.addEventListener('click', this.handleClick.bind(this), true);
+        document.addEventListener('click', this.boundHandleClick, true);
         
         // Input events
-        document.addEventListener('input', this.handleInput.bind(this), true);
-        document.addEventListener('change', this.handleChange.bind(this), true);
+        document.addEventListener('input', this.boundHandleInput, true);
+        document.addEventListener('change', this.boundHandleChange, true);
         
         // Navigation events
-        window.addEventListener('beforeunload', this.handleNavigation.bind(this));
+        window.addEventListener('beforeunload', this.boundHandleNavigation);
     }
     
     removeRecordingListeners() {
-        document.removeEventListener('click', this.handleClick.bind(this), true);
-        document.removeEventListener('input', this.handleInput.bind(this), true);
-        document.removeEventListener('change', this.handleChange.bind(this), true);
-        window.removeEventListener('beforeunload', this.handleNavigation.bind(this));
+        document.removeEventListener('click', this.boundHandleClick, true);
+        document.removeEventListener('input', this.boundHandleInput, true);
+        document.removeEventListener('change', this.boundHandleChange, true);
+        window.removeEventListener('beforeunload', this.boundHandleNavigation);
     }
     
     handleClick(event) {
@@ -195,23 +199,31 @@ class AutoFillerContent {
     }    async playActionsOnPage(actions, playbackSpeed = 'instant') {
         console.log('Playing actions on current page:', actions.length, 'actions at speed:', playbackSpeed);
         
-        for (const action of actions) {
+        for (let i = 0; i < actions.length; i++) {
+            const action = actions[i];
             try {
+                console.log(`Executing action ${i + 1}/${actions.length}:`, action.type);
                 await this.executeAction(action);
                 
-                // Apply speed-based delays (skip delay for navigation actions as they cause page unload)
-                if (action.type !== 'navigate' && action.type !== 'navigation') {
+                // Apply speed-based delays between actions (not after navigation actions)
+                if (i < actions.length - 1 && action.type !== 'navigate' && action.type !== 'navigation') {
+                    let delay = 0;
                     switch (playbackSpeed) {
                         case 'fast':
-                            await this.wait(50);
+                            delay = 50;
                             break;
                         case 'normal':
-                            await this.wait(500);
+                            delay = 300; // Reduced from 500ms to 300ms
                             break;
                         case 'instant':
                         default:
-                            // No delay for instant mode
+                            delay = 0;
                             break;
+                    }
+                    
+                    if (delay > 0) {
+                        console.log(`Waiting ${delay}ms before next action...`);
+                        await this.wait(delay);
                     }
                 }
                 
@@ -231,42 +243,6 @@ class AutoFillerContent {
         } catch (error) {
             console.log('Could not notify background of completion:', error);
         }
-    }
-
-    async playScenario(scenario, playbackSpeed = 'instant') {
-        console.log('Playing scenario:', scenario, 'at speed:', playbackSpeed);
-        
-        for (const action of scenario) {
-            try {
-                await this.executeAction(action);
-                
-                // Apply speed-based delays
-                if (action.type === 'navigate') {
-                    // Always add minimal delay for navigation to ensure page loads
-                    await this.wait(100);
-                } else {
-                    // Apply playback speed delays for other actions
-                    switch (playbackSpeed) {
-                        case 'fast':
-                            await this.wait(50);
-                            break;
-                        case 'normal':
-                            await this.wait(500);
-                            break;
-                        case 'instant':
-                        default:
-                            // No delay for instant mode
-                            break;
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Error executing action:', error);
-                // Try to continue with next action
-            }
-        }
-        
-        console.log('Scenario playback completed');
     }
     
     async executeAction(action) {
@@ -292,7 +268,7 @@ class AutoFillerContent {
         }
     }    async executeClick(action) {
         console.log('Executing click action:', action);
-        const element = await this.findElement(action);
+        const element = await this.findElement(action, 5); // More retries for clicks
         if (element) {
             console.log('Element found for click:', element, 'onclick:', element.onclick, 'href:', element.href);
             
@@ -304,6 +280,9 @@ class AutoFillerContent {
             
             // Use instant scroll for better speed
             element.scrollIntoView({ behavior: 'instant', block: 'center' });
+            
+            // Small delay to ensure element is in view
+            await this.wait(50);
             
             console.log('Clicking element...');
             element.click();
@@ -353,11 +332,11 @@ class AutoFillerContent {
         
         return false;
     }
-    
-    async executeType(action) {
-        const element = await this.findElement(action);
+      async executeType(action) {
+        const element = await this.findElement(action, 3);
         if (element && ['INPUT', 'TEXTAREA'].includes(element.tagName)) {
             element.focus();
+            await this.wait(50); // Small delay after focus
             element.value = '';
             element.value = action.value;
             element.dispatchEvent(new Event('input', { bubbles: true }));
@@ -368,8 +347,10 @@ class AutoFillerContent {
     }
     
     async executeSelect(action) {
-        const element = await this.findElement(action);
+        const element = await this.findElement(action, 3);
         if (element && element.tagName === 'SELECT') {
+            element.focus();
+            await this.wait(50); // Small delay after focus
             element.value = action.value;
             element.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
@@ -382,14 +363,29 @@ class AutoFillerContent {
             window.location.href = action.url;
         }
     }
-    
-    async findElement(action) {
-        // Try exact selector first
-        let element = document.querySelector(action.selector);
+      async findElement(action, maxRetries = 3) {
+        let element = null;
+        let attempts = 0;
         
-        if (!element && action.elementInfo) {
-            // Use AI-assisted element matching
-            element = await this.elementMatcher.findSimilarElement(action.elementInfo);
+        while (!element && attempts < maxRetries) {
+            attempts++;
+            
+            // Try exact selector first
+            element = document.querySelector(action.selector);
+            
+            if (!element && action.elementInfo) {
+                // Use AI-assisted element matching
+                element = await this.elementMatcher.findSimilarElement(action.elementInfo);
+            }
+            
+            if (!element && attempts < maxRetries) {
+                console.log(`Element not found on attempt ${attempts}, retrying in 100ms...`);
+                await this.wait(100);
+            }
+        }
+        
+        if (!element) {
+            console.warn(`Element not found after ${maxRetries} attempts:`, action.selector);
         }
         
         return element;
@@ -619,11 +615,10 @@ class ElementMatcher {
             score += 0.4;
         }
         factors += 0.1;
-        
-        // Class similarity
+          // Class similarity
         if (info1.className && info2.className) {
-            const classes1 = info1.className.split('');
-            const classes2 = info2.className.split('');
+            const classes1 = info1.className.split(' ').filter(c => c.trim());
+            const classes2 = info2.className.split(' ').filter(c => c.trim());
             const commonClasses = classes1.filter(c => classes2.includes(c));
             score += (commonClasses.length / Math.max(classes1.length, classes2.length)) * 0.3;
         }

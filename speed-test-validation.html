@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Test Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            background: #e8f4fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #007acc;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005c99;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Speed Test Validation Page</h1>
+        
+        <div class="test-step">
+            <h3>Test Scenario for Normal Speed</h3>
+            <p>This page is designed to test the "normal" speed playback fixes.</p>
+            <ol>
+                <li><strong>Record:</strong> Start recording and perform these actions:
+                    <ul>
+                        <li>Type "Test User" in the name field</li>
+                        <li>Select "Option 2" from the dropdown</li>
+                        <li>Click "Submit Form"</li>
+                        <li>Click "Go to Page 2" (navigation test)</li>
+                    </ul>
+                </li>
+                <li><strong>Test Playback:</strong> Set speed to "Normal" and replay</li>
+                <li><strong>Expected Result:</strong> All actions should execute correctly with proper delays</li>
+            </ol>
+        </div>
+        
+        <form id="testForm">
+            <div style="margin: 15px 0;">
+                <label for="nameInput">Name:</label><br>
+                <input type="text" id="nameInput" name="name" placeholder="Enter your name" style="width: 100%; padding: 8px; margin-top: 5px;">
+            </div>
+            
+            <div style="margin: 15px 0;">
+                <label for="optionSelect">Choose Option:</label><br>
+                <select id="optionSelect" name="option" style="width: 100%; padding: 8px; margin-top: 5px;">
+                    <option value="">Select an option</option>
+                    <option value="option1">Option 1</option>
+                    <option value="option2">Option 2</option>
+                    <option value="option3">Option 3</option>
+                </select>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <button type="button" onclick="submitForm()">Submit Form</button>
+                <button type="button" onclick="goToPage2()">Go to Page 2</button>
+                <button type="button" onclick="fillTestData()">Fill Test Data</button>
+            </div>
+        </form>
+        
+        <div id="result" style="display: none; margin-top: 20px; padding: 15px; background: #d4edda; border-radius: 5px;">
+            ✅ Form submitted successfully!
+        </div>
+        
+        <div class="test-step success" style="margin-top: 30px;">
+            <h3>🔧 What Was Fixed:</h3>
+            <ul>
+                <li><strong>Navigation Detection:</strong> Increased timeout from 1s to 10s for "normal" speed</li>
+                <li><strong>Element Finding:</strong> Added retry logic with up to 5 attempts for clicks</li>
+                <li><strong>Action Delays:</strong> Reduced inter-action delay from 500ms to 300ms</li>
+                <li><strong>Focus Timing:</strong> Added small delays after focus events</li>
+            </ul>
+        </div>
+        
+        <div class="test-step warning">
+            <h3>⚠️ If Issues Persist:</h3>
+            <p>Check the browser console (F12) for detailed logs showing:</p>
+            <ul>
+                <li>Navigation detection attempts</li>
+                <li>Element finding retries</li>
+                <li>Action execution timing</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        function submitForm() {
+            const name = document.getElementById('nameInput').value;
+            const option = document.getElementById('optionSelect').value;
+            
+            console.log('Form submitted:', { name, option });
+            document.getElementById('result').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('result').style.display = 'none';
+            }, 3000);
+        }
+        
+        function goToPage2() {
+            console.log('Navigating to test-page-2.html...');
+            window.location.href = 'test-page-2.html';
+        }
+        
+        function fillTestData() {
+            document.getElementById('nameInput').value = 'Test User';
+            document.getElementById('optionSelect').value = 'option2';
+        }
+        
+        // Add event listeners for debugging
+        document.addEventListener('click', function(e) {
+            console.log('Click event:', e.target.tagName, e.target.textContent || e.target.value);
+        });
+        
+        document.addEventListener('input', function(e) {
+            console.log('Input event:', e.target.name, '=', e.target.value);
+        });
+        
+        document.addEventListener('change', function(e) {
+            console.log('Change event:', e.target.name, '=', e.target.value);
+        });
+    </script>
+</body>
+</html>
