@@ -514,10 +514,21 @@ class ElementMatcher {
     getIdSelector(element) {
         return element.id ? `#${element.id}` : null;
     }
-    
-    getClassSelector(element) {
+      getClassSelector(element) {
         if (!element.className) return null;
-        const classes = element.className.split(' ').filter(c => c.trim());
+        
+        // Handle both string className and DOMTokenList
+        let classString = '';
+        if (typeof element.className === 'string') {
+            classString = element.className;
+        } else if (element.className.toString) {
+            // DOMTokenList has toString method
+            classString = element.className.toString();
+        } else {
+            return null;
+        }
+        
+        const classes = classString.split(' ').filter(c => c.trim());
         if (classes.length === 0) return null;
         return `.${classes.join('.')}`;
     }
@@ -543,12 +554,21 @@ class ElementMatcher {
         
         return `${parentSelector} > ${element.tagName.toLowerCase()}:nth-child(${index})`;
     }
-    
-    getElementInfo(element) {
+      getElementInfo(element) {
+        // Safely get className as string
+        let className = '';
+        if (element.className) {
+            if (typeof element.className === 'string') {
+                className = element.className;
+            } else if (element.className.toString) {
+                className = element.className.toString();
+            }
+        }
+        
         return {
             tagName: element.tagName,
             id: element.id,
-            className: element.className,
+            className: className,
             textContent: element.textContent?.substring(0, 100),
             attributes: this.getRelevantAttributes(element),
             position: this.getElementPosition(element),
@@ -582,45 +602,71 @@ class ElementMatcher {
             height: element.offsetHeight
         };
     }
-    
-    async findSimilarElement(elementInfo) {
-        // AI-assisted element matching
-        const candidates = document.querySelectorAll(elementInfo.tagName?.toLowerCase() || '*');
-        let bestMatch = null;
-        let bestScore = 0;
-        
-        for (const candidate of candidates) {
-            const score = this.calculateSimilarity(elementInfo, this.getElementInfo(candidate));
-            if (score > bestScore && score > 0.7) { // Threshold for similarity
-                bestScore = score;
-                bestMatch = candidate;
+      async findSimilarElement(elementInfo) {
+        try {
+            // AI-assisted element matching
+            const candidates = document.querySelectorAll(elementInfo.tagName?.toLowerCase() || '*');
+            let bestMatch = null;
+            let bestScore = 0;
+            
+            for (const candidate of candidates) {
+                try {
+                    const score = this.calculateSimilarity(elementInfo, this.getElementInfo(candidate));
+                    if (score > bestScore && score > 0.7) { // Threshold for similarity
+                        bestScore = score;
+                        bestMatch = candidate;
+                    }
+                } catch (error) {
+                    console.warn('Error calculating similarity for element:', error);
+                    continue; // Skip this element and continue with next
+                }
             }
+            
+            return bestMatch;
+        } catch (error) {
+            console.error('Error in findSimilarElement:', error);
+            return null;
         }
-        
-        return bestMatch;
     }
-    
-    calculateSimilarity(info1, info2) {
-        let score = 0;
-        let factors = 0;
-        
-        // Tag name match
-        if (info1.tagName === info2.tagName) {
-            score += 0.3;
-        }
-        factors += 0.3;
+      calculateSimilarity(info1, info2) {
+        try {
+            let score = 0;
+            let factors = 0;
+            
+            // Tag name match
+            if (info1.tagName === info2.tagName) {
+                score += 0.3;
+            }
+            factors += 0.3;
         
         // ID match
         if (info1.id && info1.id === info2.id) {
             score += 0.4;
         }
-        factors += 0.1;
-          // Class similarity
+        factors += 0.1;        // Class similarity
         if (info1.className && info2.className) {
-            const classes1 = info1.className.split(' ').filter(c => c.trim());
-            const classes2 = info2.className.split(' ').filter(c => c.trim());
-            const commonClasses = classes1.filter(c => classes2.includes(c));
-            score += (commonClasses.length / Math.max(classes1.length, classes2.length)) * 0.3;
+            // Safely convert className to string for both string and DOMTokenList
+            let classString1 = '';
+            let classString2 = '';
+            
+            if (typeof info1.className === 'string') {
+                classString1 = info1.className;
+            } else if (info1.className.toString) {
+                classString1 = info1.className.toString();
+            }
+            
+            if (typeof info2.className === 'string') {
+                classString2 = info2.className;
+            } else if (info2.className.toString) {
+                classString2 = info2.className.toString();
+            }
+            
+            if (classString1 && classString2) {
+                const classes1 = classString1.split(' ').filter(c => c.trim());
+                const classes2 = classString2.split(' ').filter(c => c.trim());
+                const commonClasses = classes1.filter(c => classes2.includes(c));
+                score += (commonClasses.length / Math.max(classes1.length, classes2.length)) * 0.3;
+            }
         }
         factors += 0.3;
         
@@ -639,10 +685,13 @@ class ElementMatcher {
         );
         if (attrs1.length > 0 || attrs2.length > 0) {
             score += (commonAttrs.length / Math.max(attrs1.length, attrs2.length)) * 0.1;
-        }
-        factors += 0.1;
+        }        factors += 0.1;
         
         return factors > 0 ? score / factors : 0;
+        } catch (error) {
+            console.warn('Error in calculateSimilarity:', error);
+            return 0; // Return 0 similarity if error occurs
+        }
     }
     
     stringSimilarity(str1, str2) {
