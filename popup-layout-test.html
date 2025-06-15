@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Layout Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-container {
+            display: inline-block;
+            background: white;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .test-label {
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-label">Extension Popup Layout Test - Scenario Controls Fix</div>
+    <div class="test-container">
+        <!-- Include the popup HTML -->
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Filler</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Auto Filler</h1>
+            <p>AI-driven web testing automation</p>
+        </header>        <div class="controls">
+            <button id="recordBtn" class="btn btn-primary">
+                <span class="icon">⏺</span>
+                Start Recording
+            </button>
+            <button id="stopBtn" class="btn btn-secondary" disabled>
+                <span class="icon">⏹</span>
+                Stop Recording
+            </button>
+            <button id="playBtn" class="btn btn-success" disabled>
+                <span class="icon">▶</span>
+                Play Scenario
+            </button>
+        </div>
+        
+        <div class="playback-settings">
+            <div class="setting-group">
+                <label for="playbackSpeed">Playback Speed:</label>
+                <select id="playbackSpeed" class="speed-selector">
+                    <option value="instant">⚡ Instant (Developer Mode)</option>
+                    <option value="fast">🚀 Fast (50ms delay)</option>
+                    <option value="normal">🐌 Normal (500ms delay)</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="scenario-section">
+            <h3>Current Scenario</h3>            <div class="scenario-controls">
+                <input type="text" id="scenarioName" placeholder="Enter scenario name..." value="Sample Long Scenario Name" />
+                <button id="saveBtn" class="btn btn-save">
+                    <span class="icon">💾</span>
+                    Save
+                </button>
+                <button id="clearBtn" class="btn btn-clear">
+                    <span class="icon">🗑</span>
+                    Clear
+                </button>
+            </div>
+            <div id="actionsList" class="actions-list">
+                <div class="action-item">
+                    <div class="action-icon action-click">C</div>
+                    <div class="action-details">
+                        <div class="action-type-text">Click</div>
+                        <div class="action-target">button#submit-form</div>
+                    </div>
+                </div>
+                <div class="action-item">
+                    <div class="action-icon action-type">T</div>
+                    <div class="action-details">
+                        <div class="action-type-text">Type</div>
+                        <div class="action-target">input[name="username"]</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+          <div class="saved-scenarios">
+            <div class="saved-scenarios-header">
+                <h3>Saved Scenarios</h3>
+                <button id="clearAllBtn" class="btn btn-clear-all">
+                    <span class="icon">🗑️</span>
+                    Clear All
+                </button>
+            </div>
+            <div id="scenariosList" class="scenarios-list">
+                <div class="scenario-item">
+                    <div class="scenario-name">Login Test</div>
+                    <div class="scenario-info">
+                        <span>3 actions</span>
+                        <span>2 mins ago</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status">
+            <span id="statusText">Ready</span>
+        </div>
+    </div>
+</body>
+</html>
+    </div>
+</body>
+</html>

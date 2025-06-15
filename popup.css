@@ -4,6 +4,16 @@
     box-sizing: border-box;
 }
 
+html, body {
+    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    height: auto;
+    max-height: none;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     width: 350px;
@@ -15,7 +25,9 @@ body {
     background: white;
     margin: 0;
     border-radius: 0;
-    overflow: hidden;
+    overflow: visible;
+    min-height: auto;
+    height: auto;
 }
 
 header {
@@ -122,25 +134,45 @@ header p {
     background: #4CAF50;
     color: white;
     flex: 0 0 auto;
-    min-width: 70px;
+    min-width: 60px;
+    max-width: 70px;
+    padding: 10px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.btn-save .icon {
+    font-size: 12px;
 }
 
 .btn-clear {
     background: #f44336;
     color: white;
     flex: 0 0 auto;
-    min-width: 70px;
+    min-width: 60px;
+    max-width: 70px;
+    padding: 10px 8px;
+    font-size: 11px;
+    white-space: nowrap;
 }
 
-.scenario-controls {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 15px;
-    align-items: center;
+.btn-clear .icon {
+    font-size: 12px;
 }
 
 .scenario-section, .saved-scenarios {
     padding: 0 20px 20px;
+}
+
+/* Enhanced scenario controls layout */
+.scenario-controls {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
 }
 
 .scenario-section h3, .saved-scenarios h3 {
@@ -195,11 +227,14 @@ header p {
 
 #scenarioName {
     flex: 1;
-    padding: 10px;
+    min-width: 120px;
+    max-width: none;
+    padding: 10px 12px;
     border: 2px solid #e1e5e9;
     border-radius: 6px;
     font-size: 13px;
     transition: border-color 0.2s ease;
+    height: auto;
 }
 
 #scenarioName:focus {
@@ -362,6 +397,16 @@ header p {
 }
 
 /* Scrollbar styling */
+
+/* Hide scrollbars for main popup elements */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.container::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+/* Custom scrollbars only for action and scenario lists */
 .actions-list::-webkit-scrollbar,
 .scenarios-list::-webkit-scrollbar {
     width: 4px;
